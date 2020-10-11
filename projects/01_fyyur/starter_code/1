@@ -9,5 +9,3 @@ flask-marshmallow
 jsonify
 request
 os
-dictfier
-marshmallow-sqlalchemy

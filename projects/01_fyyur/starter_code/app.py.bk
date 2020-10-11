@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for, jsonify
+from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -13,12 +13,6 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
-from flask_marshmallow import Marshmallow
-import sys
-import os
-import dictfier
-from sqlalchemy import func
-
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -33,7 +27,6 @@ app.config['SQLALCHEMY_DATABASE_URI']='postgresql://fswd:fswd@35.208.39.244:5432
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 
 db = SQLAlchemy(app, session_options={"expire_on_commit":False})
-ma = Marshmallow(app)
 migrate = Migrate(app,db)
 
 #----------------------------------------------------------------------------#
@@ -53,7 +46,7 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
 
     def __repr__(self):
-      return f'<Venue {self.id} {self.name} >'
+      return f'<Venue {self.id} {self.description} >'
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -70,7 +63,7 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
 
     def __repr__(self):
-      return f'<Artist {self.id} {self.name} >'
+      return f'<Artist {self.id} {self.description} >'
 
 class Show(db.Model):
     __tablename__='Show'
@@ -81,22 +74,17 @@ class Show(db.Model):
     eventdate = db.Column(db.DateTime,nullable=False)
 
     def __repr__(self):
-      return f'<Show {self.id}>'
-
-
-venue1 = Venue(id=1,name="The Musical Hop",city="San Francisco",state="CA",address="1015 Folsom Street",phone="123-123-1234",image_link="https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",facebook_link="https://www.facebook.com/TheMusicalHop")
-venue2 = Venue(id=3,name="Park Square Live Music & Coffee",city="San Francisco",state="CA",address="34 Whiskey moore ave",phone="415-000-1234",image_link="https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",facebook_link="https://www.facebook.com/ParkSquareLiveMusicAndCoffee")
-venue3 = Venue(id=2,name="The Dueling Pianos Bar",city="New York",state="NY",address="335 Delancey Street",phone="914-003-1132",image_link="https://images.unsplash.com/photo-1497032205916-ac775f0649ae?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=750&q=80",facebook_link="https://www.facebook.com/theduelingpianos")
-
-artist1 = Artist(id=4,name="Guns N Petals",genres="['Rock n Roll']")
-artist2 = Artist(id=5,name="Matt Quevedo",genres="['Jazz']")
-artist3 = Artist(id=6,name="The Wild Sax Band",genres="['Jazz','Classical']")
-
-show1 = Show(id=7,artist_id=4,venue_id=1,eventdate="2019-05-21T21:30:00.000Z")
-show2 = Show(id=8,artist_id=4,venue_id=2,eventdate="2019-05-19T21:30:00.000Z")
-show3 = Show(id=9,artist_id=5,venue_id=3,eventdate="2019-05-25T21:30:00.000Z")
+      return f'<Show {self.id} {self.description} >'
 
 try:
+  venue1 = Venue(id=1,name="The Musical Hop",city="San Francisco",state="CA",address="1015 Folsom Street",phone="123-123-1234",image_link="https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",facebook_link="https://www.facebook.com/TheMusicalHop")
+  venue2 = Venue(id=3,name="Park Square Live Music & Coffee",city="San Francisco",state="CA",address="34 Whiskey moore ave",phone="415-000-1234",image_link="https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",facebook_link="https://www.facebook.com/ParkSquareLiveMusicAndCoffee")
+  venue3 = Venue(id=2,name="The Dueling Pianos Bar",city="San Francisco",state="CA",address="335 Delancey Street",phone="914-003-1132",image_link="https://images.unsplash.com/photo-1497032205916-ac775f0649ae?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=750&q=80",facebook_link="https://www.facebook.com/theduelingpianos")
+
+  artist1 = Artist(id=4,name="Guns N Petals",genres="["Rock n Roll"]")
+  artist2 = Artist(id=5,name="Matt Quevedo",genres="["Jazz"]")
+  artist3 = Artist(id=6,name="The Wild Sax Band",genres="["Jazz","Classical"]"))
+
   db.session.add(venue1)
   db.session.add(venue2)
   db.session.add(venue3)
@@ -104,18 +92,14 @@ try:
   db.session.add(artist2)
   db.session.add(artist3)
   db.session.commit()
-
-  db.session.add(show1)
-  db.session.add(show2)
-  db.session.add(show3)
-  db.session.commit()
 except:
    db.session.rollback()
    error=True
-  #print(sys.exc_info())
+   print(sys.exc_info())
 
 finally:
   db.session.close()
+
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -139,6 +123,7 @@ app.jinja_env.filters['datetime'] = format_datetime
 def index():
   return render_template('pages/home.html')
 
+
 #  Venues
 #  ----------------------------------------------------------------
 
@@ -146,26 +131,27 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-
-  #venue_query = Venue.query.group_by(Venue.id, Venue.state, Venue.city).all()
-  current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-  #show_query = Show.query.filter(Show.eventdate < current_time).all()
-
-  #venue_query = db.session.query(Venue,Show).join(Show).filter(Show.eventdate < current_time).order_by(Venue.id).all()
-  #venue_query = db.session.query(Venue,Show).join(Show).filter(Show.eventdate < current_time).order_by(Venue.id).all()
-  venue_query = db.session.query(Venue.city,Venue.state,Show.venue_id,Venue.name,db.func.count(Show.venue_id)).join(Show, Show.venue_id == Venue.id).group_by(Venue.city,Venue.state,Show.venue_id,Venue.name).all()
-  data = []
-  
-  for V in venue_query:
-    record = {
-    'city': V.city,
-    'state': V.state,
-    'venues': [ {"id":V.venue_id, "name" : V.name, "num_upcoming_shows" : 1}]}
-
-    data.append(record)
-  print(data)
-
-  
+  data=[{
+    "city": "San Francisco",
+    "state": "CA",
+    "venues": [{
+      "id": 1,
+      "name": "The Musical Hop",
+      "num_upcoming_shows": 0,
+    }, {
+      "id": 3,
+      "name": "Park Square Live Music & Coffee",
+      "num_upcoming_shows": 1,
+    }]
+  }, {
+    "city": "New York",
+    "state": "NY",
+    "venues": [{
+      "id": 2,
+      "name": "The Dueling Pianos Bar",
+      "num_upcoming_shows": 0,
+    }]
+  }]
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
@@ -301,17 +287,16 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
   # TODO: replace with real data returned from querying the database
-  artist_query = Artist.query.group_by(Artist.id, Artist.name).all()
-
-  data = []
-
-  for A in artist_query:
-    record = {
-    'id': A.id,
-    'name': A.name}
-
-    data.append(record)
-
+  data=[{
+    "id": 4,
+    "name": "Guns N Petals",
+  }, {
+    "id": 5,
+    "name": "Matt Quevedo",
+  }, {
+    "id": 6,
+    "name": "The Wild Sax Band",
+  }]
   return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
@@ -571,7 +556,7 @@ if not app.debug:
 
 # Default port:
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    app.run()
 
 # Or specify port manually:
 '''
