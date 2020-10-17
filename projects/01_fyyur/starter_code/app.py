@@ -30,7 +30,7 @@ moment = Moment(app)
 app.config.from_object('config')
 
 
-app.config['SQLALCHEMY_DATABASE_URI']='postgresql://fsnd:fsnd@35.208.39.244:5432/fsnd'
+app.config['SQLALCHEMY_DATABASE_URI']='postgresql://fsnd:fsnd@ip:5432/fsnd'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 
 db = SQLAlchemy(app, session_options={"expire_on_commit":False})
