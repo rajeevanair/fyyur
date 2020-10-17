@@ -11,3 +11,5 @@ request
 os
 dictfier
 marshmallow-sqlalchemy
+dateutil
+pandas
