@@ -30,7 +30,7 @@ moment = Moment(app)
 app.config.from_object('config')
 
 
-app.config['SQLALCHEMY_DATABASE_URI']='postgresql://fsnd:fsnd@ip:5432/fsnd'
+app.config['SQLALCHEMY_DATABASE_URI']='postgresql://fsnd:fsnd@35.208.39.244:5432/fsnd'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 
 db = SQLAlchemy(app, session_options={"expire_on_commit":False})
@@ -257,7 +257,7 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   v_id = venue_id
-  vid_query = db.session.query(Venue.city,Venue.website,Venue.facebook_link,Venue.seeking_talent,Venue.seeking_description,Venue.state,Venue.address,Show.venue_id.label("venue_id"),Venue.name.label("venue_name"),Venue.address.label("address"),Venue.phone).join(Show, Show.venue_id == Venue.id).filter(Show.venue_id == v_id).all()
+  vid_query = db.session.query(Venue.city,Venue.website,Venue.facebook_link,Venue.seeking_talent,Venue.seeking_description,Venue.state,Venue.address,Show.venue_id.label("venue_id"),Venue.name.label("venue_name"),Venue.address.label("address"),Venue.phone,Venue.image_link).join(Show, Show.venue_id == Venue.id).filter(Show.venue_id == v_id).all()
 
   data = []
   
@@ -273,7 +273,8 @@ def show_venue(venue_id):
     "website" : VI.website,
     "facebook_link" : VI.facebook_link,
     "seeking_talent" : VI.seeking_talent,
-    "seeking_description" : VI.seeking_description
+    "seeking_description" : VI.seeking_description,
+    "image_link" : VI.image_link
     }
 
   
@@ -295,27 +296,45 @@ def create_venue_submission():
   phone = request.form['phone']
   address = request.form['address']
 
-  venue1 = Venue(name=name,state=state,city=city,phone=phone,address=address)
-  db.session.add(venue1)
-  db.session.commit()
+  if len(city) > 120:
+    flash('Length of city should be less than or equal to 120')
+    return render_template('pages/home.html')
+  elif len(state) > 120:
+    flash('Length of state should be less than or equal to 120')
+    return render_template('pages/home.html')
+  elif len(phone) > 120:
+    flash('Length of phone should be less than or equal to 120')
+    return render_template('pages/home.html')
+  elif len(address) > 120:
+    flash('Length of address should be less than or equal to 120')
+    return render_template('pages/home.html')
+  else:
+    venue1 = Venue(name=name,state=state,city=city,phone=phone,address=address)
+    db.session.add(venue1)
+    db.session.commit()
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+    return render_template('pages/home.html')
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
   # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  
   # TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-  # TODO: Complete this endpoint for taking a venue_id, and using
-  # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
-
-  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-  # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+  try:
+    venue = Venue.query.filter_by(id=venue_id).first_or_404()
+    db.session.delete(venue)
+    db.session.commit()
+    flash('The venue has been removed together with all of its shows.')
+    return render_template('pages/home.html')
+  except ValueError:
+    flash('It was not possible to delete this Venue')
+    return render_template('pages/home.html')
+    
 
 #  Artists
 #  ----------------------------------------------------------------
