@@ -62,16 +62,8 @@ def create_app(test_config=None):
 
     return result
 
-  '''
-  @TODO: 
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
-
-  '''
-
   @app.route('/questions',methods=['GET'])
+  
   def get_questions():
     question = Question.query.order_by(Question.id).all()
 
@@ -88,6 +80,17 @@ def create_app(test_config=None):
     })
 
     return result
+
+  '''
+  @TODO: 
+  Create an endpoint to handle GET requests for questions, 
+  including pagination (every 10 questions). 
+  This endpoint should return a list of questions, 
+  number of total questions, current category, categories. 
+
+  '''
+
+
 
 
 
@@ -173,165 +176,118 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
-   @app.route('/questions', methods=['POST'])
-    def add_new_question():
-        body = request.get_json()
+  @app.route('/questions', methods=['POST'])
 
-        new_question = body.get('question', None)
-        new_answer = body.get('answer', None)
-        new_difficulty = body.get('difficulty', None)
-        new_category = body.get('category', None)
-        search_term = body.get('searchTerm', None)
+  def add_new_question():
+    body = request.get_json()
 
-        try:
-            if search_term:
-                selection = Question.query.order_by(Question.id).filter(
-                    Question.question.ilike('%{}%'.format(search_term)))
-                current_questions = paginate_questions(request, selection)
+    new_question = body.get('question', None)
+    new_answer = body.get('answer', None)
+    new_difficulty = body.get('difficulty', None)
+    new_category = body.get('category', None)
+    search_term = body.get('searchTerm', None)
 
-                return jsonify({
-                    'success': True,
-                    'questions': current_questions,
-                    'total_questions': len(selection.all()),
-                    'current_category': None
-                })
+    try:
+      if search_term:
+        selection = Question.query.order_by(Question.id).filter(Question.question.ilike('%{}%'.format(search_term)))
+        current_questions = paginate_questions(request, selection)
+        return jsonify({
+          'success': True,
+          'questions': current_questions,
+          'total_questions': len(selection.all()),
+          'current_category': None})
 
-            else:
-                question = Question(
-                    question=new_question,
-                    answer=new_answer,
-                    category=new_category,
-                    difficulty=new_difficulty)
-                question.insert()
-
-                selection = Question.query.order_by(Question.id).all()
-                current_questions = paginate_questions(request, selection)
-
-                return jsonify({
-                    'success': True,
-                    'created': question.id,
-                    'questions': current_questions,
-                    'total_questions': len(Question.query.all())
-                })
-
-        except BaseException:
-            abort(422)
-
-    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
-    def retrieve_questions_by_category(category_id):
-        try:
-            category_id = str(category_id + 1)
-            selection = Question.query.filter(
-                Question.category == category_id).all()
-            current_questions = paginate_questions(request, selection)
-
-            return jsonify({
-                'success': True,
-                'questions': current_questions,
-                'total_questions': len(Question.query.all()),
-                'current_category': category_id
-            })
-        except BaseException:
-            abort(422)
-
-    @app.route('/quizzes', methods=['POST'])
-    def get_quiz_questions():
-        body = request.get_json()
-        if not body:
-            abort(400)
-        previous_q = body['previous_questions']
-        category_id = body['quiz_category']['id']
-        category_id = str(int(category_id) + 1)
-
-        if category_id == 0:
-            if previous_q is not None:
-                questions = Question.query.filter(
-                    Question.id.notin_(previous_q)).all()
-            else:
-                questions = Question.query.all()
-        else:
-            if previous_q is not None:
-                questions = Question.query.filter(
-                    Question.id.notin_(previous_q),
-                    Question.category == category_id).all()
-            else:
-                questions = Question.query.filter(
-                    Question.category == category_id).all()
-
-        next_question = random.choice(questions).format()
-        if not next_question:
-            abort(404)
-        if next_question is None:
-            next_question = False
+      else:
+        question = Question(question=new_question,answer=new_answer,category=new_category,difficulty=new_difficulty)
+        question.insert()
+        selection = Question.query.order_by(Question.id).all()
+        current_questions = paginate_questions(request, selection)
 
         return jsonify({
-            'success': True,
-            'question': next_question
+          'success': True,
+          'created': question.id,
+          'questions': current_questions,
+          'total_questions': len(Question.query.all())
+          })
+
+    except BaseException:
+      abort(422)
+
+@app.route('/categories/<int:category_id>/questions', methods=['GET'])
+def retrieve_questions_by_category(category_id):
+
+  try:
+    category_id = str(category_id + 1)
+    selection = Question.query.filter(Question.category == category_id).all()
+    current_questions = paginate_questions(request, selection)
+
+    return jsonify({
+      'success': True,
+      'questions': current_questions,
+      'total_questions': len(Question.query.all()),
+      'current_category': category_id})
+  
+  except BaseException:
+    abort(422)
+
+@app.route('/quizzes', methods=['POST'])
+def get_quiz_questions():
+  body = request.get_json()
+  
+  if not body:
+    abort(400)
+
+  previous_q = body['previous_questions']
+  category_id = body['quiz_category']['id']
+  category_id = str(int(category_id) + 1)
+
+  if category_id == 0:
+    if previous_q is not None:
+      questions = Question.query.filter(Question.id.notin_(previous_q)).all()
+    else:
+      questions = Question.query.all()
+  else:
+    if previous_q is not None:
+      questions = Question.query.filter(Question.id.notin_(previous_q),Question.category == category_id).all()
+    else:
+      questions = Question.query.filter(Question.category == category_id).all()
+      next_question = random.choice(questions).format()
+      
+      if not next_question:
+        abort(404)
+
+      if next_question is None:
+        next_question = False
+
+      return jsonify({
+        'success': True,
+        'question': next_question
         })
 
-    @app.errorhandler(404)
-    def not_found(error):
-        return jsonify({
-            "success": False,
-            "error": 404,
-            "message": "resource not found"
-        }), 404
+@app.errorhandler(404)
+def not_found(error):
+  return jsonify({
+    "success": False,
+    "error": 404,
+    "message": "resource not found"
+    }), 404
 
-    @app.errorhandler(422)
-    def unprocessable(error):
-        return jsonify({
-            "success": False,
-            "error": 422,
-            "message": "unprocessable"
-        }), 422
+@app.errorhandler(422)
+def unprocessable(error):
+  return jsonify({
+    "success": False,
+    "error": 422,
+    "message": "unprocessable"
+    }), 422
 
-    @app.errorhandler(400)
-    def bad_request(error):
-        return jsonify({
-            "success": False,
-            "error": 400,
-            "message": "bad request"
-        }), 400
+@app.errorhandler(400)
+def bad_request(error):
+  return jsonify({
+    "success": False,
+    "error": 400,
+    "message": "bad request"
+    }), 400
 
-  '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
-
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  '''
-
-  '''
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
-
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
-  '''
-
-
-  '''
-  @TODO: 
-  Create a POST endpoint to get questions to play the quiz. 
-  This endpoint should take category and previous question parameters 
-  and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
-
-  TEST: In the "Play" tab, after a user selects "All" or a category,
-  one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not. 
-  '''
-
-  '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
-  '''
-  
   return app
 
     
