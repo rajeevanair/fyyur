@@ -108,6 +108,7 @@ def create_app(test_config=None):
 
   @app.route('/questions/<int:question_id>',methods=['DELETE'])
   def delete_questions(question_id):
+    
     try:
       question = Question.query.filter(Question.id == question_id).one_or_none()
 
@@ -213,6 +214,8 @@ def create_app(test_config=None):
     except BaseException:
       abort(422)
 
+  return app
+
 @app.route('/categories/<int:category_id>/questions', methods=['GET'])
 def retrieve_questions_by_category(category_id):
 
@@ -288,6 +291,5 @@ def bad_request(error):
     "message": "bad request"
     }), 400
 
-  return app
 
     
